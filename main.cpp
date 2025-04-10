@@ -76,36 +76,89 @@ int getDemandPriority(char d) {
 }
 
 // Function to place items based on demand
-void placeItemsOnShelves(warehouse &w, vector<item> &itemsList) {
-    sort(itemsList.begin(), itemsList.end(), [](const item &a, const item &b) {
-        return getDemandPriority(a.demand) > getDemandPriority(b.demand);
-    });
+// Knapsack placement with value = weight × demand priority
+// Function to place items using fractional knapsack logic
+void placeItemsKnapsackBased(warehouse &w, vector<item> &itemsList) {
+    // Compute value per weight based on demand
+    vector<tuple<double, int>> valuePerWeightIndex;
+    for (int i = 0; i < itemsList.size(); i++) {
+        double value = itemsList[i].weight * getDemandPriority(itemsList[i].demand);
+        valuePerWeightIndex.push_back({value / itemsList[i].weight, i});
+    }
 
-    for (auto &it : itemsList) {
-        int weightRemaining = it.weight;
-        bool placed = false;
+    // Sort items based on value/weight ratio (descending)
+    sort(valuePerWeightIndex.rbegin(), valuePerWeightIndex.rend());
 
-        for (int i = w.rows - 1; i >= 0 && weightRemaining > 0; i--) {
-            for (int j = 0; j < w.columns && weightRemaining > 0; j++) {
-                shelf &s = w.shelfGrid[i][j];
-                int spaceLeft = s.maxWeight - s.currentWeight;
+    for (int i = 0; i < w.rows; i++) {
+        for (int j = 0; j < w.columns; j++) {
+            int remainingCapacity = w.weightPerShelf;
 
-                if (spaceLeft > 0) {
-                    int weightToPlace = min(spaceLeft, weightRemaining);
-                    s.storedItems.push_back(it.name + " (" + to_string(weightToPlace) + "kg)");
-                    s.currentWeight += weightToPlace;
-                    weightRemaining -= weightToPlace;
-                    placed = true;
+            for (auto &[vpw, idx] : valuePerWeightIndex) {
+                if (itemsList[idx].weight == 0) continue; // already placed
 
-                    cout << "Placed " << it.name << " (" << weightToPlace << "kg) on shelf (" << i << ", " << j << ")\n";
+                item &it = itemsList[idx];
+
+                if (it.weight <= remainingCapacity) {
+                    // Place full item
+                    w.shelfGrid[i][j].storedItems.push_back(it.name + " (" + to_string(it.weight) + "kg)");
+                    w.shelfGrid[i][j].currentWeight += it.weight;
+                    remainingCapacity -= it.weight;
+                    cout << "Placed full " << it.name << " on shelf (" << i << ", " << j << ")\n";
+                    it.weight = 0;
+                } else if (remainingCapacity > 0) {
+                    // Place fraction
+                    int placedWt = remainingCapacity;
+                    w.shelfGrid[i][j].storedItems.push_back(it.name + " (" + to_string(placedWt) + "kg*)");
+                    w.shelfGrid[i][j].currentWeight += placedWt;
+                    it.weight -= placedWt;
+                    cout << "Placed partial " << it.name << " (" << placedWt << "kg) on shelf (" << i << ", " << j << ")\n";
+                    break;  // Shelf is now full
                 }
             }
         }
+    }
+}
 
-        if (!placed || weightRemaining > 0) {
-            cout << "Could not fully place item: " << it.name << ". Weight left: " << weightRemaining << "kg\n";
+void displayWarehouseGrid(const warehouse &w) {
+    cout << "\n📦 Warehouse Shelf Grid View:\n\n";
+
+    const int boxWidth = 26; // increased for better spacing
+    const int contentWidth = boxWidth - 2;
+
+    for (int i = 0; i < w.rows; i++) {
+        // Top border for each shelf
+        for (int j = 0; j < w.columns; j++) {
+            cout << "+" << string(boxWidth, '-') << "+ ";
         }
-    } 
+        cout << "\n";
+
+        // Coordinates and weight
+        for (int j = 0; j < w.columns; j++) {
+            const shelf &s = w.shelfGrid[i][j];
+            string coord = "(" + to_string(i) + "," + to_string(j) + ")";
+            string wt = to_string(s.currentWeight) + "kg";
+
+            string line = coord + " " + wt;
+            cout << "| " << setw(contentWidth) << left << line << "| ";
+        }
+        cout << "\n";
+
+        // Max 3 item lines per shelf
+        for (int line = 0; line < 3; line++) {
+            for (int j = 0; j < w.columns; j++) {
+                const shelf &s = w.shelfGrid[i][j];
+                string itemStr = (line < s.storedItems.size()) ? s.storedItems[line] : "";
+                cout << "| " << setw(contentWidth) << left << itemStr << "| ";
+            }
+            cout << "\n";
+        }
+
+        // Bottom border
+        for (int j = 0; j < w.columns; j++) {
+            cout << "+" << string(boxWidth, '-') << "+ ";
+        }
+        cout << "\n\n";
+    }
 }
 
 void searchItem(const warehouse &w, const string &itemName) {
@@ -134,7 +187,7 @@ int main() {
     getItems(itemsList);
 
     // Place items on shelves
-    placeItemsOnShelves(w, itemsList);
+    placeItemsKnapsackBased(w, itemsList);
 
     // Print item placement details
     cout << "\nFinal shelf status:\n";
@@ -147,10 +200,12 @@ int main() {
             cout << " | Total weight: " << w.shelfGrid[i][j].currentWeight << " kg\n";
         }
     }
+    displayWarehouseGrid(w);
+
     string query;
     cout << "\nEnter item name to search: ";
     cin >> query;
     searchItem(w, query);
-    
+
     return 0;
 }
