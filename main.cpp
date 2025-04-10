@@ -105,7 +105,22 @@ void placeItemsOnShelves(warehouse &w, vector<item> &itemsList) {
         if (!placed || weightRemaining > 0) {
             cout << "Could not fully place item: " << it.name << ". Weight left: " << weightRemaining << "kg\n";
         }
+    } 
+}
+
+void searchItem(const warehouse &w, const string &itemName) {
+    bool found = false;
+    for (int i = 0; i < w.rows; i++) {
+        for (int j = 0; j < w.columns; j++) {
+            for (const auto &storedItem : w.shelfGrid[i][j].storedItems) {
+                if (storedItem.find(itemName) != string::npos) {
+                    cout << "Found " << storedItem << " on shelf (" << i << ", " << j << ")\n";
+                    found = true;
+                }
+            }
+        }
     }
+    if (!found) cout << "Item " << itemName << " not found.\n";
 }
 
 int main() {
@@ -132,6 +147,10 @@ int main() {
             cout << " | Total weight: " << w.shelfGrid[i][j].currentWeight << " kg\n";
         }
     }
-
+    string query;
+    cout << "\nEnter item name to search: ";
+    cin >> query;
+    searchItem(w, query);
+    
     return 0;
 }
