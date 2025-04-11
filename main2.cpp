@@ -232,6 +232,7 @@ void displayWarehouseGrid(const warehouse &w)
 void searchItem(const warehouse &w, const string &itemName)
 {
     bool found = false;
+    cout<<endl;
     for (int i = 0; i < w.rows; i++)
     {
         for (int j = 0; j < w.columns; j++)
