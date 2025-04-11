@@ -6,6 +6,7 @@ struct item {
     string name;   // Item name
     int weight;    // Item weight in kg
     char demand;   // Item demand ('h' for high, 'm' for medium, 'l' for low)
+    int year, month, day;  // Expiry Date.
 };
 
 // Struct for shelf details
@@ -13,6 +14,11 @@ struct shelf {
     int maxWeight;                // max weight each shelf can hold
     int currentWeight = 0;
     vector<string> storedItems;   // List of items stored on the shelf
+};
+
+struct ItemMeta {
+    double priorityScore;
+    int idx;
 };
 
 // Struct for warehouse information
@@ -24,6 +30,17 @@ struct warehouse {
     int totalCapacity;
     vector<vector<shelf>> shelfGrid;  // 2D grid for shelves
 };
+
+bool isExpired(int y, int m, int d) {
+    time_t now = time(0);
+    tm *ltm = localtime(&now);
+
+    if (y < 1900 + ltm->tm_year) return true;
+    if (y == 1900 + ltm->tm_year && m < 1 + ltm->tm_mon) return true;
+    if (y == 1900 + ltm->tm_year && m == 1 + ltm->tm_mon && d < ltm->tm_mday) return true;
+
+    return false;
+}
 
 void getWareHouseValues(warehouse &w) {
     cout << "Enter number of rows of your warehouse: ";
@@ -61,6 +78,13 @@ void getItems(vector<item> &itemsList) {
         cin >> it.weight;
         cout << "Enter demand (h = High, m = Medium, l = Low): ";
         cin >> it.demand;
+        cout << "Enter expiry date (YYYY MM DD): ";
+        cin >> it.year >> it.month >> it.day;
+
+        if (isExpired(it.year, it.month, it.day)) {
+            cout << "❌ Item is expired and will not be stored.\n";
+            continue;
+        }
         itemsList.push_back(it);
     }
 }
@@ -72,25 +96,37 @@ int getDemandPriority(char d) {
 }
 
 void placeItemsKnapsackBased(warehouse &w, vector<item> &itemsList, unordered_map<string, vector<pair<int, int>>> &itemLocations) {
-    vector<tuple<double, int>> valuePerWeightIndex;
+    vector<ItemMeta> itemMeta;
     for (int i = 0; i < itemsList.size(); i++) {
-        double value = itemsList[i].weight * getDemandPriority(itemsList[i].demand);
-        valuePerWeightIndex.push_back({value / itemsList[i].weight, i});
+        double score = getDemandPriority(itemsList[i].demand);
+        itemMeta.push_back({score, i});
     }
 
-    sort(valuePerWeightIndex.rbegin(), valuePerWeightIndex.rend());
+    // Sort by demand → expiry
+    sort(itemMeta.begin(), itemMeta.end(), [&](const ItemMeta &a, const ItemMeta &b) {
+        if (a.priorityScore != b.priorityScore)
+            return a.priorityScore > b.priorityScore;
+
+        const item &ia = itemsList[a.idx];
+        const item &ib = itemsList[b.idx];
+
+        if (ia.year != ib.year) return ia.year < ib.year;
+        if (ia.month != ib.month) return ia.month < ib.month;
+        return ia.day < ib.day;
+    });
+
 
     for (int i = 0; i < w.rows; i++) {
         for (int j = 0; j < w.columns; j++) {
             int remainingCapacity = w.weightPerShelf;
 
-            for (auto &[vpw, idx] : valuePerWeightIndex) {
+            for (auto &[score, idx] : itemMeta) {
                 if (itemsList[idx].weight == 0) continue;
 
                 item &it = itemsList[idx];
 
                 if (it.weight <= remainingCapacity) {
-                    w.shelfGrid[i][j].storedItems.push_back(it.name + " (" + to_string(it.weight) + "kg)");
+                    w.shelfGrid[i][j].storedItems.push_back(it.name + " (" + to_string(it.weight) + "kg, Exp: " + to_string(it.year) + "-" + (it.month < 10 ? "0" : "") + to_string(it.month) + "-" + (it.day < 10 ? "0" : "") + to_string(it.day) + ")");
                     w.shelfGrid[i][j].currentWeight += it.weight;
                     remainingCapacity -= it.weight;
                     itemLocations[it.name].push_back({i, j});
@@ -98,7 +134,7 @@ void placeItemsKnapsackBased(warehouse &w, vector<item> &itemsList, unordered_ma
                     it.weight = 0;
                 } else if (remainingCapacity > 0) {
                     int placedWt = remainingCapacity;
-                    w.shelfGrid[i][j].storedItems.push_back(it.name + " (" + to_string(placedWt) + "kg*)");
+                    w.shelfGrid[i][j].storedItems.push_back(it.name + " (" + to_string(placedWt) + "kg*, Exp: " + to_string(it.year) + "-" + (it.month < 10 ? "0" : "") + to_string(it.month) + "-" + (it.day < 10 ? "0" : "") + to_string(it.day) + ")");
                     w.shelfGrid[i][j].currentWeight += placedWt;
                     it.weight -= placedWt;
                     itemLocations[it.name].push_back({i, j});
