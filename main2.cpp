@@ -238,29 +238,63 @@ int main() {
     vector<item> itemsList;
     unordered_map<string, vector<pair<int, int>>> itemLocations;
 
+    cout << "🛒 Welcome to SuperMart Smart Warehouse System!\n";
+    cout << "\n📦 Let's set up your warehouse shelves!\n";
     getWareHouseValues(w);
-    getItems(itemsList);
-    placeItemsKnapsackBased(w, itemsList, itemLocations);
 
-    cout << "\nFinal shelf status:\n";
-    for (int i = 0; i < w.rows; i++) {
-        for (int j = 0; j < w.columns; j++) {
-            cout << "Shelf (" << i << ", " << j << "): ";
-            for (const auto &itemName : w.shelfGrid[i][j].storedItems) {
-                cout << itemName << " ";
+    int choice;
+    do {
+        cout << "\n🔢 Choose an action:\n";
+        cout << "1. 📥 Enter items to store\n";
+        cout << "2. 🗺️  View shelf status/grid\n";
+        cout << "3. 🚚 Retrieve items (TSP optimized)\n";
+        cout << "4. 🔍 Search for an item\n";
+        cout << "0. ❌ Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                getItems(itemsList);
+                placeItemsKnapsackBased(w, itemsList, itemLocations);
+
+                cout << "\n📊 Final shelf status:\n";
+                for (int i = 0; i < w.rows; i++) {
+                    for (int j = 0; j < w.columns; j++) {
+                        cout << "Shelf (" << i << ", " << j << "): ";
+                        for (const auto &itemName : w.shelfGrid[i][j].storedItems) {
+                            cout << itemName << " ";
+                        }
+                        cout << " | Total weight: " << w.shelfGrid[i][j].currentWeight << " kg\n";
+                    }
+                }
+                break;
+
+            case 2:
+                displayWarehouseGrid(w);
+                break;
+
+            case 3:
+                retrieveItemsWithTSP(itemLocations);
+                break;
+
+            case 4: {
+                string query;
+                cout << "Enter item name to search: ";
+                cin >> query;
+                searchItem(w, query);
+                break;
             }
-            cout << " | Total weight: " << w.shelfGrid[i][j].currentWeight << " kg\n";
+
+            case 0:
+                cout << "👋 Exiting... Thank you for using SuperMart System!\n";
+                break;
+
+            default:
+                cout << "⚠️ Invalid choice. Please select from 0 to 4.\n";
         }
-    }
-
-    displayWarehouseGrid(w);
-
-    string query;
-    cout << "\nEnter item name to search: ";
-    cin >> query;
-    searchItem(w, query);
-
-    retrieveItemsWithTSP(itemLocations);
+    } while (choice != 0);
 
     return 0;
 }
+
