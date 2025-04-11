@@ -100,9 +100,9 @@ void getItems(vector<item> &itemsList)
         cout << "\n\e[1;35mItem " << i + 1 << ":\e[m\n";
         cout << "\e[32mEnter name: \e[m";
         cin >> it.name;
-        cout << "\e32mEnter weight (in kg): \e[m";
+        cout << "\e[32mEnter weight (in kg): \e[m";
         cin >> it.weight;
-        cout << "\e32mEnter demand (h = High, m = Medium, l = Low): \e[m";
+        cout << "\e[32mEnter demand (h = High, m = Medium, l = Low): \e[m";
         cin >> it.demand;
         cout << "\e[32mEnter expiry date (YYYY MM DD): \e[m";
         cin >> it.year >> it.month >> it.day;
@@ -166,7 +166,7 @@ void placeItemsKnapsackBased(warehouse &w, vector<item> &itemsList, unordered_ma
                     w.shelfGrid[i][j].currentWeight += it.weight;
                     remainingCapacity -= it.weight;
                     itemLocations[it.name].push_back({i, j});
-                    cout << "Placed full " << it.name << " on shelf (" << i << ", " << j << ")\n";
+                    cout << "\n\n\e[1mPlaced full " << it.name << " on shelf (" << i << ", " << j << ")\e[m\n";
                     it.weight = 0;
                 }
                 else if (remainingCapacity > 0)
@@ -176,17 +176,18 @@ void placeItemsKnapsackBased(warehouse &w, vector<item> &itemsList, unordered_ma
                     w.shelfGrid[i][j].currentWeight += placedWt;
                     it.weight -= placedWt;
                     itemLocations[it.name].push_back({i, j});
-                    cout << "Placed partial " << it.name << " (" << placedWt << "kg) on shelf (" << i << ", " << j << ")\n";
+                    cout << "\n\n\e[1mPlaced partial " << it.name << " (" << placedWt << "kg) on shelf (" << i << ", " << j << ")\e[m\n";
                     break;
                 }
             }
         }
     }
+    clearScreen();
 }
 
 void displayWarehouseGrid(const warehouse &w)
 {
-    cout << "\n📦 Warehouse Shelf Grid View:\n\n";
+    cout << "\e[1;35mWarehouse Shelf Grid View:\e[m\n\n";
     const int boxWidth = 26;
     const int contentWidth = boxWidth - 2;
 
@@ -225,6 +226,7 @@ void displayWarehouseGrid(const warehouse &w)
         }
         cout << "\n\n";
     }
+    clearScreen();
 }
 
 void searchItem(const warehouse &w, const string &itemName)
@@ -238,14 +240,15 @@ void searchItem(const warehouse &w, const string &itemName)
             {
                 if (storedItem.find(itemName) != string::npos)
                 {
-                    cout << "Found " << storedItem << " on shelf (" << i << ", " << j << ")\n";
+                    cout << "\e[1;35mFound " << storedItem << " on shelf (" << i << ", " << j << ")\e[m\n";
                     found = true;
                 }
             }
         }
     }
     if (!found)
-        cout << "Item " << itemName << " not found.\n";
+        cout << "\n\n\e[1;31mItem " << itemName << " not found.\e[m\n";
+    clearScreen();
 }
 
 int tspFixedStart(const vector<pair<int, int>> &points, vector<int> &bestOrder)
@@ -283,7 +286,7 @@ int tspFixedStart(const vector<pair<int, int>> &points, vector<int> &bestOrder)
 void retrieveItemsWithTSP(unordered_map<string, vector<pair<int, int>>> &itemLocations)
 {
     int n;
-    cout << "\nEnter number of items to retrieve: ";
+    cout << "\e[32mEnter number of items to retrieve: \e[m";
     cin >> n;
 
     vector<pair<int, int>> points = {{0, 0}}; // starting point
@@ -292,7 +295,7 @@ void retrieveItemsWithTSP(unordered_map<string, vector<pair<int, int>>> &itemLoc
     for (int i = 0; i < n; i++)
     {
         string itemName;
-        cout << "Enter item name #" << i + 1 << ": ";
+        cout << "Enter item name #" << i + 1 << " : ";
         cin >> itemName;
 
         if (itemLocations.count(itemName))
@@ -302,33 +305,34 @@ void retrieveItemsWithTSP(unordered_map<string, vector<pair<int, int>>> &itemLoc
         }
         else
         {
-            cout << "Item " << itemName << " not found in warehouse.\n";
+            cout << "\e[1;31mItem " << itemName << " not found in warehouse.\e[m\n";
         }
     }
 
     if (points.size() <= 2)
     {
-        cout << "Not enough items to calculate TSP.\n";
+        cout << "\n\n\e[1;31mNot enough items to calculate TSP.\e[m\n";
+        clearScreen();
         return;
     }
 
     vector<int> bestPath;
     int totalDistance = tspFixedStart(points, bestPath);
 
-    cout << "\nOptimal retrieval path from (0,0) (TSP):\n";
+    cout << "\e[1;35mOptimal retrieval path from (0,0) (TSP): \e[m\n";
     for (int i = 0; i < bestPath.size(); ++i)
     {
         int idx = bestPath[i];
         auto [r, c] = points[idx];
-        cout << i + 1 << ". Move to (" << r << ", " << c << ")";
+        cout <<"\e[1m"<< i + 1 << ". Move to (" << r << ", " << c << ")";
         if (itemOrder[idx] != "START")
         {
             cout << " to retrieve " << itemOrder[idx];
         }
-        cout << "\n";
+        cout << "\e[m\n";
     }
 
-    cout << "Total distance: " << totalDistance << " steps\n";
+    cout << "\e[1;32mTotal distance: " << totalDistance << " steps\e[m\n";
 }
 
 int main()
@@ -361,19 +365,20 @@ int main()
             getItems(itemsList);
             placeItemsKnapsackBased(w, itemsList, itemLocations);
 
-            cout << "\nFinal shelf status:\n";
+            cout << "\e[1;33mFinal shelf status:\e[m\n";
             for (int i = 0; i < w.rows; i++)
             {
                 for (int j = 0; j < w.columns; j++)
                 {
-                    cout << "Shelf (" << i << ", " << j << "): ";
+                    cout << "\e[1mShelf (" << i << ", " << j << "): ";
                     for (const auto &itemName : w.shelfGrid[i][j].storedItems)
                     {
                         cout << itemName << " ";
                     }
-                    cout << " | Total weight: " << w.shelfGrid[i][j].currentWeight << " kg\n";
+                    cout << " | Total weight: " << w.shelfGrid[i][j].currentWeight << " kg\e[m\n";
                 }
             }
+            clearScreen();
             break;
 
         case 2:
@@ -390,7 +395,7 @@ int main()
         {
             Cleardisplay();
             string query;
-            cout << "Enter item name to search: ";
+            cout << "\e[1;33mEnter item name to search: \e[m";
             cin >> query;
             searchItem(w, query);
             break;
