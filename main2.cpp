@@ -336,6 +336,104 @@ void retrieveItemsWithTSP(unordered_map<string, vector<pair<int, int>>> &itemLoc
     cout << "\e[1;32mTotal distance: " << totalDistance << " steps\e[m\n";
 }
 
+void saveDataToFile(const warehouse &w, const vector<item> &itemsList, const unordered_map<string, vector<pair<int, int>>> &itemLocations) {
+    ofstream file("warehouse_data.txt");
+    if (!file) {
+        cout << "\e[1;31mError saving data!\e[m\n";
+        return;
+    }
+
+    file << w.rows << " " << w.columns << " " << w.weightPerShelf << "\n";
+    for (int i = 0; i < w.rows; i++) {
+        for (int j = 0; j < w.columns; j++) {
+            const shelf &s = w.shelfGrid[i][j];
+            file << s.currentWeight << " " << s.storedItems.size();
+            for (auto &itm : s.storedItems) {
+                file << " " << itm;
+            }
+            file << "\n";
+        }
+    }
+
+    file << itemsList.size() << "\n";
+    for (auto &it : itemsList) {
+        file << it.name << " " << it.weight << " " << it.demand << " "
+             << it.year << " " << it.month << " " << it.day << "\n";
+    }
+
+    file << itemLocations.size() << "\n";
+    for (auto &[name, locs] : itemLocations) {
+        file << name << " " << locs.size();
+        for (auto &[r, c] : locs) {
+            file << " " << r << " " << c;
+        }
+        file << "\n";
+    }
+
+    file.close();
+    cout << "\e[1;32mData saved successfully!\e[m\n";
+}
+
+void loadDataFromFile(warehouse& w, vector<item>& itemsList, unordered_map<string, vector<pair<int, int>>>& itemLocations)
+{
+    ifstream file("warehouse_data.txt");
+    if (!file) {
+        cout << "\e[1;31mFailed to load file.\e[m\n";
+        return;
+    }
+
+    // Load warehouse config
+    file >> w.rows >> w.columns >> w.weightPerShelf;
+    w.totalShelves = w.rows * w.columns;
+    w.totalCapacity = w.totalShelves * w.weightPerShelf;
+
+    w.shelfGrid.resize(w.rows, vector<shelf>(w.columns));
+    for (int i = 0; i < w.rows; i++) {
+        for (int j = 0; j < w.columns; j++) {
+            int currentWeight, storedCount;
+            file >> currentWeight >> storedCount;
+            w.shelfGrid[i][j].currentWeight = currentWeight;
+            w.shelfGrid[i][j].maxWeight = w.weightPerShelf;
+
+            w.shelfGrid[i][j].storedItems.clear();
+            for (int k = 0; k < storedCount; k++) {
+                string itemDesc;
+                file >> ws; // consume any leading whitespace
+                getline(file, itemDesc);
+                w.shelfGrid[i][j].storedItems.push_back(itemDesc);
+            }
+        }
+    }
+
+    // Load item list
+    int itemCount;
+    file >> itemCount;
+    itemsList.clear();
+    for (int i = 0; i < itemCount; ++i) {
+        item it;
+        file >> it.name >> it.weight >> it.demand >> it.year >> it.month >> it.day;
+        itemsList.push_back(it);
+    }
+
+    // Load item locations
+    int locationCount;
+    file >> locationCount;
+    itemLocations.clear();
+    for (int i = 0; i < locationCount; ++i) {
+        string name;
+        int locSize;
+        file >> name >> locSize;
+        for (int j = 0; j < locSize; ++j) {
+            int r, c;
+            file >> r >> c;
+            itemLocations[name].push_back({r, c});
+        }
+    }
+
+    file.close();
+    cout << "\e[1;32mData loaded successfully!\e[m\n";
+}
+
 int main()
 {
     warehouse w;
@@ -355,6 +453,8 @@ int main()
         cout << "2. View shelf status/grid\n";
         cout << "3. Retrieve items (TSP optimized)\n";
         cout << "4. Search for an item\n";
+        cout << "5. Save warehouse data to file\n";
+        cout << "6. Load warehouse data from file\n";
         cout << "0. Exit\n\n";
         cout << "\e[1;36mEnter your choice: \e[m";
         cin >> choice;
@@ -401,7 +501,18 @@ int main()
             searchItem(w, query);
             break;
         }
-
+        case 5:{
+            Cleardisplay();
+            saveDataToFile(w, itemsList, itemLocations);
+            clearScreen();
+            break;
+        }
+        case 6:{
+            Cleardisplay();
+            loadDataFromFile(w, itemsList, itemLocations);
+            clearScreen();
+            break;
+        }
         case 0:
             Cleardisplay();
             cout << "\e[1;31mExiting... Thank you for using SuperMart System!\e[m\n";
