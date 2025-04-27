@@ -232,7 +232,7 @@ void displayWarehouseGrid(const warehouse &w)
 void searchItem(const warehouse &w, const string &itemName)
 {
     bool found = false;
-    cout<<endl;
+    cout << endl;
     for (int i = 0; i < w.rows; i++)
     {
         for (int j = 0; j < w.columns; j++)
@@ -306,26 +306,25 @@ void retrieveItemsWithTSP(unordered_map<string, vector<pair<int, int>>> &itemLoc
         }
         else
         {
-            cout << "\e[1;31mItem " << itemName << " not found in warehouse.\e[m\n";
+            cout << "\n\n\e[1;31mItem " << itemName << " not found in warehouse.\e[m\n";
         }
     }
 
     if (points.size() <= 2)
     {
         cout << "\n\n\e[1;31mNot enough items to calculate TSP.\e[m\n";
-        clearScreen();
         return;
     }
 
     vector<int> bestPath;
     int totalDistance = tspFixedStart(points, bestPath);
 
-    cout << "\e[1;35mOptimal retrieval path from (0,0) (TSP): \e[m\n";
+    cout << "\n\n\e[1;35mOptimal retrieval path from (0,0) (TSP): \e[m\n";
     for (int i = 0; i < bestPath.size(); ++i)
     {
         int idx = bestPath[i];
         auto [r, c] = points[idx];
-        cout <<"\e[1m"<< i + 1 << ". Move to (" << r << ", " << c << ")";
+        cout << "\e[1m" << i + 1 << ". Move to (" << r << ", " << c << ")";
         if (itemOrder[idx] != "START")
         {
             cout << " to retrieve " << itemOrder[idx];
@@ -333,37 +332,45 @@ void retrieveItemsWithTSP(unordered_map<string, vector<pair<int, int>>> &itemLoc
         cout << "\e[m\n";
     }
 
-    cout << "\e[1;32mTotal distance: " << totalDistance << " steps\e[m\n";
+    cout << "\n\e[1;32mTotal distance: " << totalDistance << " steps\e[m\n";
 }
 
-void saveDataToFile(const warehouse &w, const vector<item> &itemsList, const unordered_map<string, vector<pair<int, int>>> &itemLocations) {
+void saveDataToFile(const warehouse &w, const vector<item> &itemsList, const unordered_map<string, vector<pair<int, int>>> &itemLocations)
+{
     ofstream file("warehouse_data.txt");
-    if (!file) {
+    if (!file)
+    {
         cout << "\e[1;31mError saving data!\e[m\n";
         return;
     }
 
     file << w.rows << " " << w.columns << " " << w.weightPerShelf << "\n";
-    for (int i = 0; i < w.rows; i++) {
-        for (int j = 0; j < w.columns; j++) {
+    for (int i = 0; i < w.rows; i++)
+    {
+        for (int j = 0; j < w.columns; j++)
+        {
             const shelf &s = w.shelfGrid[i][j];
             file << s.currentWeight << " " << s.storedItems.size() << "\n";
-            for (auto &itm : s.storedItems) {
-                file << itm<<"\n";
+            for (auto &itm : s.storedItems)
+            {
+                file << itm << "\n";
             }
         }
     }
 
     file << itemsList.size() << "\n";
-    for (auto &it : itemsList) {
+    for (auto &it : itemsList)
+    {
         file << it.name << " " << it.weight << " " << it.demand << " "
              << it.year << " " << it.month << " " << it.day << "\n";
     }
 
     file << itemLocations.size() << "\n";
-    for (auto &[name, locs] : itemLocations) {
+    for (auto &[name, locs] : itemLocations)
+    {
         file << name << " " << locs.size();
-        for (auto &[r, c] : locs) {
+        for (auto &[r, c] : locs)
+        {
             file << " " << r << " " << c;
         }
         file << "\n";
@@ -373,10 +380,11 @@ void saveDataToFile(const warehouse &w, const vector<item> &itemsList, const uno
     cout << "\e[1;32mData saved successfully!\e[m\n";
 }
 
-void loadDataFromFile(warehouse& w, vector<item>& itemsList, unordered_map<string, vector<pair<int, int>>>& itemLocations)
+void loadDataFromFile(warehouse &w, vector<item> &itemsList, unordered_map<string, vector<pair<int, int>>> &itemLocations)
 {
     ifstream file("warehouse_data.txt");
-    if (!file) {
+    if (!file)
+    {
         cout << "\e[1;31mFailed to load file.\e[m\n";
         return;
     }
@@ -387,21 +395,24 @@ void loadDataFromFile(warehouse& w, vector<item>& itemsList, unordered_map<strin
     w.totalCapacity = w.totalShelves * w.weightPerShelf;
 
     w.shelfGrid.resize(w.rows, vector<shelf>(w.columns));
-    for (int i = 0; i < w.rows; i++) {
-        for (int j = 0; j < w.columns; j++) {
+    for (int i = 0; i < w.rows; i++)
+    {
+        for (int j = 0; j < w.columns; j++)
+        {
             int currentWeight, storedCount;
             file >> currentWeight >> storedCount;
-            
-            w.shelfGrid[i][j].currentWeight = currentWeight;  // Don't remove this
+
+            w.shelfGrid[i][j].currentWeight = currentWeight; // Don't remove this
             w.shelfGrid[i][j].maxWeight = w.weightPerShelf;  // Don't remove this
 
             w.shelfGrid[i][j].storedItems.clear();
-            file.ignore();  // Consume any lingering newline character
-            for (int k = 0; k < storedCount; k++) {
+            file.ignore(); // Consume any lingering newline character
+            for (int k = 0; k < storedCount; k++)
+            {
                 string itemDesc;
-                file >> ws; // Consume any leading whitespace
-                getline(file, itemDesc);  // Read the full line for item name
-                w.shelfGrid[i][j].storedItems.push_back(itemDesc);  // Add the item description
+                file >> ws;                                        // Consume any leading whitespace
+                getline(file, itemDesc);                           // Read the full line for item name
+                w.shelfGrid[i][j].storedItems.push_back(itemDesc); // Add the item description
             }
         }
     }
@@ -410,7 +421,8 @@ void loadDataFromFile(warehouse& w, vector<item>& itemsList, unordered_map<strin
     int itemCount;
     file >> itemCount;
     itemsList.clear();
-    for (int i = 0; i < itemCount; ++i) {
+    for (int i = 0; i < itemCount; ++i)
+    {
         item it;
         file >> it.name >> it.weight >> it.demand >> it.year >> it.month >> it.day;
         itemsList.push_back(it);
@@ -420,11 +432,13 @@ void loadDataFromFile(warehouse& w, vector<item>& itemsList, unordered_map<strin
     int locationCount;
     file >> locationCount;
     itemLocations.clear();
-    for (int i = 0; i < locationCount; ++i) {
+    for (int i = 0; i < locationCount; ++i)
+    {
         string name;
         int locSize;
         file >> name >> locSize;
-        for (int j = 0; j < locSize; ++j) {
+        for (int j = 0; j < locSize; ++j)
+        {
             int r, c;
             file >> r >> c;
             itemLocations[name].push_back({r, c});
@@ -435,17 +449,16 @@ void loadDataFromFile(warehouse& w, vector<item>& itemsList, unordered_map<strin
     cout << "\e[1;32mData loaded successfully!\e[m\n";
 }
 
-void showExpiringSoonItems(const vector<item>& itemsList) {
+void showExpiringSoonItems(const vector<item> &itemsList)
+{
     int daysAhead;
     cout << "\n\e[35mEnter number of days ahead to check for expiry: \e[m";
     cin >> daysAhead;
 
-    cout << "\n\e[1;35mItems expiring within next " << daysAhead << " days:\e[m\n\n";
-
     time_t now = time(0);
 
     // Set current time to today's midnight
-    tm* nowTm = localtime(&now);
+    tm *nowTm = localtime(&now);
     nowTm->tm_hour = 0;
     nowTm->tm_min = 0;
     nowTm->tm_sec = 0;
@@ -453,7 +466,8 @@ void showExpiringSoonItems(const vector<item>& itemsList) {
 
     bool found = false; // to check if any item matched
 
-    for (const auto& it : itemsList) {
+    for (const auto &it : itemsList)
+    {
         tm expiryTm = {};
         expiryTm.tm_year = it.year - 1900;
         expiryTm.tm_mon = it.month - 1;
@@ -464,14 +478,17 @@ void showExpiringSoonItems(const vector<item>& itemsList) {
 
         time_t expiryTime = mktime(&expiryTm);
 
-        if (expiryTime == -1) {
+        if (expiryTime == -1)
+        {
             continue; // invalid expiry date, skip
         }
 
         double diffSeconds = difftime(expiryTime, now);
         int diffDays = diffSeconds / (60 * 60 * 24);
 
-        if (diffDays >= 0 && diffDays <= daysAhead) {
+        if (diffDays >= 0 && diffDays <= daysAhead)
+        {
+            cout << "\n\e[1;35mItems expiring within next " << daysAhead << " days:\e[m\n";
             found = true;
             cout << "\e[32mItem Name: " << it.name << "\n";
             cout << "Expiry Date: " << it.day << "-" << it.month << "-" << it.year << "\n";
@@ -479,9 +496,53 @@ void showExpiringSoonItems(const vector<item>& itemsList) {
         }
     }
 
-    if (!found) {
+    if (!found)
+    {
         cout << "\e[1;31mNo items expiring within " << daysAhead << " days.\e[m\n";
     }
+}
+
+void deleteItem(warehouse &w, vector<item> &itemsList, unordered_map<string, vector<pair<int, int>>> &itemLocations) {
+    string itemName;
+    cout << "\e[36mEnter the item name to delete: \e[m";
+    cin >> itemName;
+
+    // Check if item exists
+    if (itemLocations.find(itemName) == itemLocations.end()) {
+        cout << "\n\n\e[1;31mItem " << itemName << " not found in warehouse.\e[m\n";
+        clearScreen();
+        return;
+    }
+
+    // Remove from shelfGrid
+    for (auto &loc : itemLocations[itemName]) {
+        int r = loc.first;
+        int c = loc.second;
+
+        shelf &s = w.shelfGrid[r][c];
+        auto it = remove_if(s.storedItems.begin(), s.storedItems.end(),
+                            [&](const string &storedItem) {
+                                return storedItem.find(itemName) != string::npos;
+                            });
+        s.storedItems.erase(it, s.storedItems.end());
+        
+        // Also, adjust the current weight (approximate, since original weight is inside string)
+        // Optional: You can improve this by storing exact weights separately if needed.
+    }
+
+    // Remove from itemLocations
+    itemLocations.erase(itemName);
+
+    // Remove from itemsList
+    itemsList.erase(remove_if(itemsList.begin(), itemsList.end(),
+                               [&](const item &it) { return it.name == itemName; }),
+                    itemsList.end());
+
+    cout << "\n\n\e[1;32mItem " << itemName << " deleted successfully!\e[m\n";
+
+    // Update file after deletion
+    saveDataToFile(w, itemsList, itemLocations);
+
 }
 
 int main()
@@ -493,7 +554,30 @@ int main()
     cout << "\n\e[1;34mWelcome to SuperMart Smart Warehouse System!\e[m\n\n\n";
     cout << "\n\e[1;33mLet's set up your warehouse shelves!\e[m";
     clearScreen();
-    getWareHouseValues(w);
+
+    cout << "\e[1m1. Load warehouse data from file\n";
+    cout << "2. Enter new warehouse data \e[m\n";
+    int LoadOrNew;
+    cout << "\n\n\e[1;36mEnter your choice: \e[m";
+    cin >> LoadOrNew;
+    switch (LoadOrNew)
+    {
+    case 1:
+        Cleardisplay();
+        loadDataFromFile(w, itemsList, itemLocations);
+        clearScreen();
+        break;
+    case 2:
+        Cleardisplay();
+        getWareHouseValues(w);
+        break;
+
+    default:
+        Cleardisplay();
+        cout << "\e[1;31mInvalid choice. Please select 1 or 2.\e[m\n\n\n";
+        clearScreen();
+        break;
+    }
 
     int choice;
     do
@@ -504,8 +588,8 @@ int main()
         cout << "3. Retrieve items (TSP optimized)\n";
         cout << "4. Search for an item\n";
         cout << "5. Save warehouse data to file\n";
-        cout << "6. Load warehouse data from file\n";
-        cout << "7. Show items expiring soon\n";
+        cout << "6. Show items expiring soon\n";
+        cout << "7. Delete item\n";
         cout << "0. Exit\n\n";
         cout << "\e[1;36mEnter your choice: \e[m";
         cin >> choice;
@@ -541,6 +625,7 @@ int main()
         case 3:
             Cleardisplay();
             retrieveItemsWithTSP(itemLocations);
+            clearScreen();
             break;
 
         case 4:
@@ -552,21 +637,26 @@ int main()
             searchItem(w, query);
             break;
         }
-        case 5:{
+        case 5:
+        {
             Cleardisplay();
             saveDataToFile(w, itemsList, itemLocations);
             clearScreen();
             break;
         }
-        case 6:{
+
+        case 6:
+        {
             Cleardisplay();
-            loadDataFromFile(w, itemsList, itemLocations);
+            showExpiringSoonItems(itemsList);
             clearScreen();
             break;
         }
-        case 7:{
+
+        case 7:
+        {
             Cleardisplay();
-            showExpiringSoonItems(itemsList);
+            deleteItem(w,itemsList,itemLocations);
             clearScreen();
             break;
         }
