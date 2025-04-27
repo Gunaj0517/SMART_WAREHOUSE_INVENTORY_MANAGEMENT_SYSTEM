@@ -1,15 +1,12 @@
-2 2 20
-20 2
-gunaj (19kg, Exp: 2029-09-09)
-parth (1kg*, Exp: 2033-10-10)
-20 1
-parth (20kg*, Exp: 2033-10-10)
-8 1
-parth (8kg, Exp: 2033-10-10)
-0 0
+2 1 30
+30 1
+kabeer (30kg*, Exp: 2027-11-15)
+30 2
+kabeer (20kg, Exp: 2027-11-15)
+brinda (10kg*, Exp: 2027-12-18)
 2
-gunaj 0 h 2029 9 9
-parth 0 l 2033 10 10
+kabeer 0 h 2027 11 15
+brinda 13 l 2027 12 18
 2
-parth 3 0 0 0 1 1 0
-gunaj 1 0 0
+brinda 1 1 0
+kabeer 2 0 0 1 0

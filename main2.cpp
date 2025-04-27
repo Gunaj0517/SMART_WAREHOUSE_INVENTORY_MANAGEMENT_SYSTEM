@@ -435,6 +435,55 @@ void loadDataFromFile(warehouse& w, vector<item>& itemsList, unordered_map<strin
     cout << "\e[1;32mData loaded successfully!\e[m\n";
 }
 
+void showExpiringSoonItems(const vector<item>& itemsList) {
+    int daysAhead;
+    cout << "\n\e[35mEnter number of days ahead to check for expiry: \e[m";
+    cin >> daysAhead;
+
+    cout << "\n\e[1;35mItems expiring within next " << daysAhead << " days:\e[m\n\n";
+
+    time_t now = time(0);
+
+    // Set current time to today's midnight
+    tm* nowTm = localtime(&now);
+    nowTm->tm_hour = 0;
+    nowTm->tm_min = 0;
+    nowTm->tm_sec = 0;
+    now = mktime(nowTm);
+
+    bool found = false; // to check if any item matched
+
+    for (const auto& it : itemsList) {
+        tm expiryTm = {};
+        expiryTm.tm_year = it.year - 1900;
+        expiryTm.tm_mon = it.month - 1;
+        expiryTm.tm_mday = it.day;
+        expiryTm.tm_hour = 0;
+        expiryTm.tm_min = 0;
+        expiryTm.tm_sec = 0;
+
+        time_t expiryTime = mktime(&expiryTm);
+
+        if (expiryTime == -1) {
+            continue; // invalid expiry date, skip
+        }
+
+        double diffSeconds = difftime(expiryTime, now);
+        int diffDays = diffSeconds / (60 * 60 * 24);
+
+        if (diffDays >= 0 && diffDays <= daysAhead) {
+            found = true;
+            cout << "\e[32mItem Name: " << it.name << "\n";
+            cout << "Expiry Date: " << it.day << "-" << it.month << "-" << it.year << "\n";
+            cout << "Days Left: " << diffDays << " days\e[m\n\n";
+        }
+    }
+
+    if (!found) {
+        cout << "\e[1;31mNo items expiring within " << daysAhead << " days.\e[m\n";
+    }
+}
+
 int main()
 {
     warehouse w;
@@ -456,6 +505,7 @@ int main()
         cout << "4. Search for an item\n";
         cout << "5. Save warehouse data to file\n";
         cout << "6. Load warehouse data from file\n";
+        cout << "7. Show items expiring soon\n";
         cout << "0. Exit\n\n";
         cout << "\e[1;36mEnter your choice: \e[m";
         cin >> choice;
@@ -511,6 +561,12 @@ int main()
         case 6:{
             Cleardisplay();
             loadDataFromFile(w, itemsList, itemLocations);
+            clearScreen();
+            break;
+        }
+        case 7:{
+            Cleardisplay();
+            showExpiringSoonItems(itemsList);
             clearScreen();
             break;
         }
