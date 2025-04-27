@@ -347,11 +347,10 @@ void saveDataToFile(const warehouse &w, const vector<item> &itemsList, const uno
     for (int i = 0; i < w.rows; i++) {
         for (int j = 0; j < w.columns; j++) {
             const shelf &s = w.shelfGrid[i][j];
-            file << s.currentWeight << " " << s.storedItems.size();
+            file << s.currentWeight << " " << s.storedItems.size() << "\n";
             for (auto &itm : s.storedItems) {
                 file << itm<<"\n";
             }
-            file << "\n";
         }
     }
 
@@ -392,24 +391,18 @@ void loadDataFromFile(warehouse& w, vector<item>& itemsList, unordered_map<strin
         for (int j = 0; j < w.columns; j++) {
             int currentWeight, storedCount;
             file >> currentWeight >> storedCount;
-            w.shelfGrid[i][j].currentWeight = currentWeight;
-            w.shelfGrid[i][j].maxWeight = w.weightPerShelf;
+            
+            w.shelfGrid[i][j].currentWeight = currentWeight;  // Don't remove this
+            w.shelfGrid[i][j].maxWeight = w.weightPerShelf;  // Don't remove this
 
             w.shelfGrid[i][j].storedItems.clear();
-            file.ignore();
+            file.ignore();  // Consume any lingering newline character
             for (int k = 0; k < storedCount; k++) {
                 string itemDesc;
-                file >> ws; // consume any leading whitespace
-                getline(file, itemDesc);
-                w.shelfGrid[i][j].storedItems.push_back(itemDesc);                
+                file >> ws; // Consume any leading whitespace
+                getline(file, itemDesc);  // Read the full line for item name
+                w.shelfGrid[i][j].storedItems.push_back(itemDesc);  // Add the item description
             }
-            // for (int k = 0; k < storedCount; k++) {
-            //     string itemDesc;
-            //     // file >> ws; // consume any leading whitespace
-            //     // getline(file, itemDesc);
-            //     file >> itemDesc;
-            //     w.shelfGrid[i][j].storedItems.push_back(itemDesc);
-            // }
         }
     }
 
