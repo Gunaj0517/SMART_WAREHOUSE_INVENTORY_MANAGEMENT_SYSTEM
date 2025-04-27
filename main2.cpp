@@ -349,7 +349,7 @@ void saveDataToFile(const warehouse &w, const vector<item> &itemsList, const uno
             const shelf &s = w.shelfGrid[i][j];
             file << s.currentWeight << " " << s.storedItems.size();
             for (auto &itm : s.storedItems) {
-                file << " " << itm;
+                file << itm<<"\n";
             }
             file << "\n";
         }
@@ -396,12 +396,20 @@ void loadDataFromFile(warehouse& w, vector<item>& itemsList, unordered_map<strin
             w.shelfGrid[i][j].maxWeight = w.weightPerShelf;
 
             w.shelfGrid[i][j].storedItems.clear();
+            file.ignore();
             for (int k = 0; k < storedCount; k++) {
                 string itemDesc;
                 file >> ws; // consume any leading whitespace
                 getline(file, itemDesc);
-                w.shelfGrid[i][j].storedItems.push_back(itemDesc);
+                w.shelfGrid[i][j].storedItems.push_back(itemDesc);                
             }
+            // for (int k = 0; k < storedCount; k++) {
+            //     string itemDesc;
+            //     // file >> ws; // consume any leading whitespace
+            //     // getline(file, itemDesc);
+            //     file >> itemDesc;
+            //     w.shelfGrid[i][j].storedItems.push_back(itemDesc);
+            // }
         }
     }
 
