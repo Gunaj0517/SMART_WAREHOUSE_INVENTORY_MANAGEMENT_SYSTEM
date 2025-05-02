@@ -202,7 +202,10 @@ void placeItemsKnapsackBased(warehouse &w, vector<item> &itemsList, unordered_ma
     clearScreen();
 }
 
-void displayWarehouseGrid(const warehouse &w) 
+int daysUntilExpiry(const item &it);
+void displayItems(const vector<item> &itemsList);
+
+void displayWarehouseGrid(const warehouse &w, vector<item> &itemsList) 
 {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -276,6 +279,7 @@ void displayWarehouseGrid(const warehouse &w)
 
     // Reset color
     SetConsoleTextAttribute(hConsole, 7);
+    displayItems(itemsList);       //graph coloring
 
     clearScreen2();
 }
@@ -596,6 +600,41 @@ void deleteItem(warehouse &w, vector<item> &itemsList, unordered_map<string, vec
 
 }
 
+int daysUntilExpiry(const item &it) {
+    tm expiryDate = {0};
+    expiryDate.tm_year = it.year - 1900;
+    expiryDate.tm_mon = it.month - 1;
+    expiryDate.tm_mday = it.day;
+
+    time_t expTime = mktime(&expiryDate);
+    time_t now = time(0);
+
+    double seconds = difftime(expTime, now);
+    int days = static_cast<int>(seconds / (60 * 60 * 24));
+    return days;
+}
+
+void displayItems(const vector<item> &itemsList) {
+    cout << "\n\e[1;34mItems in Warehouse:\e[m\n";
+    for (const auto &it : itemsList) {
+        int daysLeft = daysUntilExpiry(it);
+        string color;
+
+        if (daysLeft < 0)
+            color = "\e[1;31m";  // Red
+        else if (daysLeft <= 60)
+            color = "\e[1;33m";  // Yellow
+        else
+            color = "\e[1;32m";  // Green
+
+        cout << color << "Item: " << it.name
+             << ", Weight: " << it.weight
+             << ", Demand: " << it.demand
+             << ", Expiry: " << it.year << "-" << it.month << "-" << it.day
+             << " (" << daysLeft << " days left)" << "\e[m\n";
+    }
+}
+
 int main()
 {
     warehouse w;
@@ -670,7 +709,7 @@ int main()
 
         case 2:
             Cleardisplay();
-            displayWarehouseGrid(w);
+            displayWarehouseGrid(w,itemsList);
             break;
 
         case 3:
