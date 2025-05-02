@@ -617,11 +617,20 @@ void deleteItem(warehouse &w, vector<item> &itemsList, unordered_map<string, vec
         int c = loc.second;
 
         shelf &s = w.shelfGrid[r][c];
-        auto it = remove_if(s.storedItems.begin(), s.storedItems.end(),
-                            [&](const string &storedItem) {
-                                return storedItem.find(itemName) != string::npos;
-                            });
-        s.storedItems.erase(it, s.storedItems.end());
+        for (auto it = s.storedItems.begin(); it != s.storedItems.end(); ) {
+            if (it->find(itemName) != string::npos) {
+                size_t start = it->find('(');
+                size_t end = it->find("kg");
+                if (start != string::npos && end != string::npos && end > start) {
+                    string weightStr = it->substr(start + 1, end - start - 1);
+                    int wt = stoi(weightStr);
+                    s.currentWeight -= wt;
+                }
+                it = s.storedItems.erase(it);
+            } else {
+                ++it;
+            }
+        }        
         
         // Also, adjust the current weight (approximate, since original weight is inside string)
         // Optional: You can improve this by storing exact weights separately if needed.
@@ -691,11 +700,18 @@ int main()
     int LoadOrNew;
     cout << "\n\n\e[1;36mEnter your choice: \e[m";
     cin >> LoadOrNew;
+    Trie itemTrie;
     switch (LoadOrNew)
     {
     case 1:
         Cleardisplay();
         loadDataFromFile(w, itemsList, itemLocations);
+        for (const auto& it : itemsList) {
+            itemTrie.insert(it.name);
+        }
+        itemTrie = Trie(); // reset the Trie
+        for (const auto &it : itemsList)
+            itemTrie.insert(it.name);
         clearScreen();
         break;
     case 2:
@@ -710,10 +726,6 @@ int main()
         break;
     }
     int choice;
-    Trie itemTrie;
-    for (const auto& it : itemsList) {
-        itemTrie.insert(it.name);
-    }
     do
     {
         cout << "\e[1;33mChoose an action:\e[m\n";
@@ -734,6 +746,10 @@ int main()
             Cleardisplay();
             getItems(itemsList);
             placeItemsKnapsackBased(w, itemsList, itemLocations);
+            // Remove items with 0 weight from list to prevent re-placement
+            itemsList.erase(remove_if(itemsList.begin(), itemsList.end(), [](const item &it) {
+                return it.weight == 0;
+            }), itemsList.end());
 
             cout << "\e[1;33mFinal shelf status:\e[m\n";
             for (int i = 0; i < w.rows; i++)
