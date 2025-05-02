@@ -848,32 +848,35 @@ case 1:
         {
         case 1:
             Cleardisplay();
-            getItems(itemsList);
+        
+            // 🧹 Purana list clear karna zaroori hai warna dubaara place ho jaate hain
+            itemsList.clear();               // 🔴 ADD THIS LINE
+        
+            getItems(itemsList);            // 🟢 Sirf naye items lo user se
+        
             for (const auto& it : itemsList) {
-                itemTrie.insert(it.name);
+                itemTrie.insert(it.name);   // autocomplete ke liye
             }
-            placeItemsKnapsackBased(w, itemsList, itemLocations);
-            // Remove items with 0 weight from list to prevent re-placement
+        
+            placeItemsKnapsackBased(w, itemsList, itemLocations);  // 📦 Place items into shelves
+        
+            // 🧹 Jinke weight 0 ho gaye (fully placed), unhe hata do
             itemsList.erase(remove_if(itemsList.begin(), itemsList.end(), [](const item &it) {
                 return it.weight == 0;
             }), itemsList.end());
-
+        
             cout << "\e[1;33mFinal shelf status:\e[m\n";
-            for (int i = 0; i < w.rows; i++)
-            {
-                for (int j = 0; j < w.columns; j++)
-                {
+            for (int i = 0; i < w.rows; i++) {
+                for (int j = 0; j < w.columns; j++) {
                     cout << "\e[1mShelf (" << i << ", " << j << "): ";
-                    for (const auto &itemName : w.shelfGrid[i][j].storedItems)
-                    {
+                    for (const auto &itemName : w.shelfGrid[i][j].storedItems) {
                         cout << itemName << " ";
                     }
                     cout << " | Total weight: " << w.shelfGrid[i][j].currentWeight << " kg\e[m\n";
                 }
             }
             clearScreen();
-            break;
-
+            break;        
         case 2:
             Cleardisplay();
             displayWarehouseGrid(w,itemsList);
