@@ -382,31 +382,39 @@ public:
         return node->fullNames;
     }
 };
-void searchItem(const warehouse &w, Trie &itemTrie, const string &query)
-{
-    vector<string> matches = itemTrie.autocomplete(query);
-    if (matches.empty()) {
-        cout << "\n\n\e[1;31mNo matching items found for prefix: " << query << "\e[m\n";
-        clearScreen();
-        return;
-    }
 
-    cout << "\n\e[1;35mItems matching prefix '" << query << "':\e[m\n";
-    for (const string &name : matches) {
-        bool found = false;
-        for (int i = 0; i < w.rows; i++) {
-            for (int j = 0; j < w.columns; j++) {
-                for (const auto &storedItem : w.shelfGrid[i][j].storedItems) {
-                    if (storedItem.find(name) != string::npos) {
-                        cout << "\e[1;32m✔ " << name << " found on shelf (" << i << ", " << j << "): " << storedItem << "\e[m\n";
+void searchItem(const warehouse &w, const string &query)
+{
+    cout << "\n\e[1;35mSearching for items matching prefix '" << query << "':\e[m\n";
+
+    unordered_set<string> displayedLocations; // Track displayed items with their locations
+    bool found = false; // Track if any items are found
+
+    // Iterate through all shelves in the warehouse
+    for (int i = 0; i < w.rows; i++) {
+        for (int j = 0; j < w.columns; j++) {
+            for (const auto &storedItem : w.shelfGrid[i][j].storedItems) {
+                // Extract the item name from the stored string
+                size_t pos = storedItem.find(" (");
+                string storedName = (pos != string::npos) ? storedItem.substr(0, pos) : storedItem;
+
+                // Check if the stored name starts with the query (prefix match)
+                if (storedName.find(query) == 0) {
+                    string uniqueKey = storedName + "_" + to_string(i) + "_" + to_string(j);
+
+                    // Avoid displaying duplicate results for the same location
+                    if (displayedLocations.find(uniqueKey) == displayedLocations.end()) {
+                        cout << "\e[1;32m✔ " << storedName << " found on shelf (" << i << ", " << j << "): " << storedItem << "\e[m\n";
+                        displayedLocations.insert(uniqueKey);
                         found = true;
                     }
                 }
             }
         }
-        if (!found) {
-            cout << "\e[1;31m✘ " << name << " not currently stored.\e[m\n";
-        }
+    }
+
+    if (!found) {
+        cout << "\e[1;31m✘ No items matching prefix '" << query << "' found in the warehouse.\e[m\n";
     }
 
     clearScreen();
@@ -798,17 +806,17 @@ int main()
     Trie itemTrie;
     switch (LoadOrNew)
     {
-    case 1:
-        Cleardisplay();
-        loadDataFromFile(w, itemsList, itemLocations);
-        for (const auto& it : itemsList) {
-            itemTrie.insert(it.name);
-        }
-        itemTrie = Trie(); // reset the Trie
-        for (const auto &it : itemsList)
-            itemTrie.insert(it.name);
-        clearScreen();
-        break;
+case 1:
+    Cleardisplay();
+    loadDataFromFile(w, itemsList, itemLocations); // Load data without modifying the function
+    populateItemsFromShelfGrid(w, itemsList);      // Synchronize itemsList with shelfGrid
+    itemTrie = Trie();                             // Rebuild the Trie
+    for (const auto &it : itemsList)
+    {
+        itemTrie.insert(it.name);
+    }
+    clearScreen();
+    break;
     case 2:
         Cleardisplay();
         getWareHouseValues(w);
@@ -883,8 +891,8 @@ int main()
             string query;
             cout << "\e[1;33mEnter item name (or prefix) to search: \e[m";
             cin >> query;
-            searchItem(w, itemTrie, query); // updated function with Trie
-            break;
+            searchItem(w, query); // Pass query directly// updated function with Trie
+            break; 
         }   
         case 5:
         {
