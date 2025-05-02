@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include <conio.h>
+#include <windows.h>
 using namespace std;
 
 void Cleardisplay()
@@ -10,6 +11,22 @@ void clearScreen()
 {
     cout << "\n\n\n\n\n\n\e[1mPRESS ANY KEY TO CONTINUE...\e[m";
     getch();
+    Cleardisplay();
+}
+void clearScreen2()
+{
+    cout << "\n\n\n\n\n\n\e[1mPRESS ARROW KEYS TO NAVIGATE OR ESC TO END...\e[m";
+    
+    char ch = getch();
+    if (ch == 27) {  
+        ch = getch();
+        if (ch == 91) {
+            ch = getch();
+            cout << "\nArrow key pressed!" << endl;
+        }
+    } else if (ch == 27) { 
+        cout << "\nESC pressed. Exiting..." << endl;
+    }
     Cleardisplay();
 }
 
@@ -185,48 +202,82 @@ void placeItemsKnapsackBased(warehouse &w, vector<item> &itemsList, unordered_ma
     clearScreen();
 }
 
-void displayWarehouseGrid(const warehouse &w)
+void displayWarehouseGrid(const warehouse &w) 
 {
-    cout << "\e[1;35mWarehouse Shelf Grid View:\e[m\n\n";
-    const int boxWidth = 26;
-    const int contentWidth = boxWidth - 2;
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-    for (int i = 0; i < w.rows; i++)
+    int boxWidth = 12;
+    int boxHeight = 5;
+    int spacing = 2;
+
+    for (int i = 0; i < w.rows; i++) 
     {
-        for (int j = 0; j < w.columns; j++)
-        {
-            cout << "+" << string(boxWidth, '-') << "+ ";
-        }
-        cout << "\n";
-
-        for (int j = 0; j < w.columns; j++)
+        for (int j = 0; j < w.columns; j++) 
         {
             const shelf &s = w.shelfGrid[i][j];
-            string coord = "(" + to_string(i) + "," + to_string(j) + ")";
-            string wt = to_string(s.currentWeight) + "kg";
-            string line = coord + " " + wt;
-            cout << "| " << setw(contentWidth) << left << line << "| ";
-        }
-        cout << "\n";
 
-        for (int line = 0; line < 3; line++)
-        {
-            for (int j = 0; j < w.columns; j++)
+            // Set background color based on shelf status
+            if (s.currentWeight == 0) 
             {
-                const shelf &s = w.shelfGrid[i][j];
-                string itemStr = (line < s.storedItems.size()) ? s.storedItems[line] : "";
-                cout << "| " << setw(contentWidth) << left << itemStr << "| ";
+                SetConsoleTextAttribute(hConsole, BACKGROUND_INTENSITY);
             }
-            cout << "\n";
-        }
+            else 
+            {
+                SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_INTENSITY);
+            }
 
-        for (int j = 0; j < w.columns; j++)
-        {
+            // Print top border
             cout << "+" << string(boxWidth, '-') << "+ ";
         }
-        cout << "\n\n";
+        cout << endl;
+
+        for (int line = 0; line < boxHeight; line++) 
+        {
+            for (int j = 0; j < w.columns; j++) 
+            {
+                const shelf &s = w.shelfGrid[i][j];
+                string content;
+
+                if (line == 1) 
+                {
+                    content = "(" + to_string(i) + "," + to_string(j) + ")";
+                } 
+                else if (line == 2) 
+                {
+                    content = to_string(s.currentWeight) + "kg";
+                } 
+                else if (line >= 3 && line - 3 < s.storedItems.size()) 
+                {
+                    content = s.storedItems[line - 3];
+                    if (content.size() > boxWidth - 2) 
+                    {
+                        content = content.substr(0, boxWidth - 5) + "...";
+                    }
+                } 
+                else 
+                {
+                    content = "";
+                }
+
+                SetConsoleTextAttribute(hConsole, (s.currentWeight > 0) ? (BACKGROUND_GREEN | BACKGROUND_INTENSITY) : BACKGROUND_INTENSITY);
+
+                cout << "| " << setw(boxWidth - 1) << left << content << "| ";
+            }
+            cout << endl;
+        }
+
+        for (int j = 0; j < w.columns; j++) 
+        {
+            SetConsoleTextAttribute(hConsole, BACKGROUND_INTENSITY);
+            cout << "+" << string(boxWidth, '-') << "+ ";
+        }
+        cout << endl << endl;
     }
-    clearScreen();
+
+    // Reset color
+    SetConsoleTextAttribute(hConsole, 7);
+
+    clearScreen2();
 }
 
 void searchItem(const warehouse &w, const string &itemName)
@@ -674,3 +725,4 @@ int main()
 
     return 0;
 }
+
