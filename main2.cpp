@@ -339,7 +339,7 @@ void displayWarehouseGrid(warehouse &w, vector<item> &itemsList)
         else if (key == 27) 
         {
             Cleardisplay();
-            break; // ESC to exit
+            break;
         }
 
         // Uncomment below if needed, but it might hide output too soon
@@ -608,7 +608,39 @@ void loadDataFromFile(warehouse &w, vector<item> &itemsList, unordered_map<strin
     file.close();
     cout << "\e[1;32mData loaded successfully!\e[m\n";
 }
+void populateItemsFromShelfGrid(const warehouse &w, vector<item> &itemsList)
+{
+    itemsList.clear(); // Make sure we're starting fresh
 
+    for (int i = 0; i < w.rows; ++i) {
+        for (int j = 0; j < w.columns; ++j) {
+            for (const string &desc : w.shelfGrid[i][j].storedItems) {
+                item it;
+                size_t nameEnd = desc.find(" (");
+                if (nameEnd == string::npos) continue;
+
+                it.name = desc.substr(0, nameEnd);
+
+                size_t weightStart = desc.find('(') + 1;
+                size_t weightEnd = desc.find("kg");
+                if (weightStart == string::npos || weightEnd == string::npos) continue;
+
+                string weightStr = desc.substr(weightStart, weightEnd - weightStart);
+                it.weight = stoi(weightStr);
+
+                size_t expStart = desc.find("Exp: ");
+                if (expStart == string::npos) continue;
+
+                string dateStr = desc.substr(expStart + 5); // after "Exp: "
+                sscanf(dateStr.c_str(), "%d-%d-%d", &it.year, &it.month, &it.day);
+
+                it.demand = 'm'; // default, since demand info isn't stored in desc
+
+                itemsList.push_back(it);
+            }
+        }
+    }
+}
 void showExpiringSoonItems(const vector<item> &itemsList)
 {
     int daysAhead;
@@ -789,6 +821,7 @@ int main()
         break;
     }
     int choice;
+    populateItemsFromShelfGrid(w, itemsList);
     do
     {
         cout << "\e[1;33mChoose an action:\e[m\n";
