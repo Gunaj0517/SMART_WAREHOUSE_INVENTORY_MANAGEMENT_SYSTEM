@@ -17,6 +17,6 @@ Grapes (5kg, Exp: 2029-11-11)
 0 0
 0
 3
-Guava 3 1 0 1 1 1 2
-Kiwi 1 0 1
 Grapes 3 0 2 1 0 1 2
+Kiwi 1 0 1
+Guava 3 1 0 1 1 1 2

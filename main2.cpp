@@ -205,7 +205,7 @@ void placeItemsKnapsackBased(warehouse &w, vector<item> &itemsList, unordered_ma
 int daysUntilExpiry(const item &it);
 void displayItems(const vector<item> &itemsList);
 
-void displayWarehouseGrid(const warehouse &w, vector<item> &itemsList) 
+void displayWarehouseGrid(warehouse &w, vector<item> &itemsList) 
 {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -213,75 +213,138 @@ void displayWarehouseGrid(const warehouse &w, vector<item> &itemsList)
     int boxHeight = 5;
     int spacing = 2;
 
-    for (int i = 0; i < w.rows; i++) 
+    int currentRow = 0;
+    int currentCol = 0;
+
+    while (true) 
     {
-        for (int j = 0; j < w.columns; j++) 
-        {
-            const shelf &s = w.shelfGrid[i][j];
+        system("cls");
 
-            // Set background color based on shelf status
-            if (s.currentWeight == 0) 
-            {
-                SetConsoleTextAttribute(hConsole, BACKGROUND_INTENSITY);
-            }
-            else 
-            {
-                SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_INTENSITY);
-            }
-
-            // Print top border
-            cout << "+" << string(boxWidth, '-') << "+ ";
-        }
-        cout << endl;
-
-        for (int line = 0; line < boxHeight; line++) 
+        for (int i = 0; i < w.rows; i++) 
         {
             for (int j = 0; j < w.columns; j++) 
             {
                 const shelf &s = w.shelfGrid[i][j];
-                string content;
 
-                if (line == 1) 
+                // Set background color based on shelf status
+                if (i == currentRow && j == currentCol) 
                 {
-                    content = "(" + to_string(i) + "," + to_string(j) + ")";
+                    SetConsoleTextAttribute(hConsole, BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_INTENSITY);
                 } 
-                else if (line == 2) 
+                else if (s.currentWeight == 0) 
                 {
-                    content = to_string(s.currentWeight) + "kg";
-                } 
-                else if (line >= 3 && line - 3 < s.storedItems.size()) 
-                {
-                    content = s.storedItems[line - 3];
-                    if (content.size() > boxWidth - 2) 
-                    {
-                        content = content.substr(0, boxWidth - 5) + "...";
-                    }
+                    SetConsoleTextAttribute(hConsole, BACKGROUND_INTENSITY);
                 } 
                 else 
                 {
-                    content = "";
+                    SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_INTENSITY);
                 }
 
-                SetConsoleTextAttribute(hConsole, (s.currentWeight > 0) ? (BACKGROUND_GREEN | BACKGROUND_INTENSITY) : BACKGROUND_INTENSITY);
-
-                cout << "| " << setw(boxWidth - 1) << left << content << "| ";
+                cout << "+" << string(boxWidth, '-') << "+ ";
             }
             cout << endl;
+
+            for (int line = 0; line < boxHeight; line++) 
+            {
+                for (int j = 0; j < w.columns; j++) 
+                {
+                    const shelf &s = w.shelfGrid[i][j];
+                    string content;
+
+                    if (line == 1) 
+                    {
+                        content = "(" + to_string(i) + "," + to_string(j) + ")";
+                    } 
+                    else if (line == 2) 
+                    {
+                        content = to_string(s.currentWeight) + "kg";
+                    } 
+                    else if (line >= 3 && line - 3 < s.storedItems.size()) 
+                    {
+                        content = s.storedItems[line - 3];
+                        if (content.size() > boxWidth - 2) 
+                        {
+                            content = content.substr(0, boxWidth - 5) + "...";
+                        }
+                    } 
+                    else 
+                    {
+                        content = "";
+                    }
+
+                    if (i == currentRow && j == currentCol) 
+                    {
+                        SetConsoleTextAttribute(hConsole, BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_INTENSITY);
+                    } 
+                    else if (s.currentWeight > 0) 
+                    {
+                        SetConsoleTextAttribute(hConsole, BACKGROUND_GREEN | BACKGROUND_INTENSITY);
+                    } 
+                    else 
+                    {
+                        SetConsoleTextAttribute(hConsole, BACKGROUND_INTENSITY);
+                    }
+
+                    cout << "| " << setw(boxWidth - 1) << left << content << "| ";
+                }
+                cout << endl;
+            }
+
+            for (int j = 0; j < w.columns; j++) 
+            {
+                SetConsoleTextAttribute(hConsole, BACKGROUND_INTENSITY);
+                cout << "+" << string(boxWidth, '-') << "+ ";
+            }
+            cout << endl << endl;
         }
 
-        for (int j = 0; j < w.columns; j++) 
+        // Reset color
+        SetConsoleTextAttribute(hConsole, 7);
+
+        // Display graph/item coloring
+        displayItems(itemsList);
+
+        // Show selected shelf data
+        shelf &selected = w.shelfGrid[currentRow][currentCol];
+        cout << "\nSelected Shelf: (" << currentRow << "," << currentCol << ")\n";
+        cout << "Weight: " << selected.currentWeight << "kg\n";
+        cout << "Items:\n";
+        if (selected.storedItems.empty()) 
         {
-            SetConsoleTextAttribute(hConsole, BACKGROUND_INTENSITY);
-            cout << "+" << string(boxWidth, '-') << "+ ";
+            cout << "  None\n";
+        } 
+        else 
+        {
+            for (const auto &itm : selected.storedItems) 
+            {
+                cout << "  - " << itm << "\n";
+            }
         }
-        cout << endl << endl;
+
+        cout << "\nUse Arrow Keys to Navigate, ESC to Exit.\n";
+
+        // Navigation
+        int key = _getch();
+        if (key == 224) 
+        {
+            int arrow = _getch();
+            switch (arrow) 
+            {
+                case 72: if (currentRow > 0) currentRow--; break; // up
+                case 80: if (currentRow < w.rows - 1) currentRow++; break; // down
+                case 75: if (currentCol > 0) currentCol--; break; // left
+                case 77: if (currentCol < w.columns - 1) currentCol++; break; // right
+            }
+        } 
+        else if (key == 27) 
+        {
+            Cleardisplay();
+            break; // ESC to exit
+        }
+
+        // Uncomment below if needed, but it might hide output too soon
+        // clearScreen2(); 
     }
-
-    // Reset color
-    SetConsoleTextAttribute(hConsole, 7);
-    displayItems(itemsList);       //graph coloring
-
-    clearScreen2();
 }
 // Trie for autocomplete-based search
 struct TrieNode {
