@@ -168,7 +168,7 @@ void placeItemsKnapsackBased(warehouse &w, vector<item> &itemsList, unordered_ma
     {
         for (int j = 0; j < w.columns; j++)
         {
-            int remainingCapacity = w.weightPerShelf;
+            int remainingCapacity = w.shelfGrid[i][j].maxWeight - w.shelfGrid[i][j].currentWeight;
 
             for (auto &[score, idx] : itemMeta)
             {
