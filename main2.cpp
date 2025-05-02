@@ -745,6 +745,9 @@ int main()
         case 1:
             Cleardisplay();
             getItems(itemsList);
+            for (const auto& it : itemsList) {
+                itemTrie.insert(it.name);
+            }
             placeItemsKnapsackBased(w, itemsList, itemLocations);
             // Remove items with 0 weight from list to prevent re-placement
             itemsList.erase(remove_if(itemsList.begin(), itemsList.end(), [](const item &it) {
