@@ -283,27 +283,69 @@ void displayWarehouseGrid(const warehouse &w, vector<item> &itemsList)
 
     clearScreen2();
 }
+// Trie for autocomplete-based search
+struct TrieNode {
+    bool isEnd;
+    unordered_map<char, TrieNode*> children;
+    vector<string> fullNames;  // All item names that pass through this node
 
-void searchItem(const warehouse &w, const string &itemName)
+    TrieNode() : isEnd(false) {}
+};
+
+class Trie {
+    TrieNode* root;
+
+public:
+    Trie() { root = new TrieNode(); }
+
+    void insert(const string &word) {
+        TrieNode* node = root;
+        for (char c : word) {
+            if (!node->children[c])
+                node->children[c] = new TrieNode();
+            node = node->children[c];
+            node->fullNames.push_back(word);  // Store full names along the path
+        }
+        node->isEnd = true;
+    }
+
+    vector<string> autocomplete(const string &prefix) {
+        TrieNode* node = root;
+        for (char c : prefix) {
+            if (!node->children[c])
+                return {};
+            node = node->children[c];
+        }
+        return node->fullNames;
+    }
+};
+void searchItem(const warehouse &w, Trie &itemTrie, const string &query)
 {
-    bool found = false;
-    cout << endl;
-    for (int i = 0; i < w.rows; i++)
-    {
-        for (int j = 0; j < w.columns; j++)
-        {
-            for (const auto &storedItem : w.shelfGrid[i][j].storedItems)
-            {
-                if (storedItem.find(itemName) != string::npos)
-                {
-                    cout << "\e[1;35mFound " << storedItem << " on shelf (" << i << ", " << j << ")\e[m\n";
-                    found = true;
+    vector<string> matches = itemTrie.autocomplete(query);
+    if (matches.empty()) {
+        cout << "\n\n\e[1;31mNo matching items found for prefix: " << query << "\e[m\n";
+        clearScreen();
+        return;
+    }
+
+    cout << "\n\e[1;35mItems matching prefix '" << query << "':\e[m\n";
+    for (const string &name : matches) {
+        bool found = false;
+        for (int i = 0; i < w.rows; i++) {
+            for (int j = 0; j < w.columns; j++) {
+                for (const auto &storedItem : w.shelfGrid[i][j].storedItems) {
+                    if (storedItem.find(name) != string::npos) {
+                        cout << "\e[1;32m✔ " << name << " found on shelf (" << i << ", " << j << "): " << storedItem << "\e[m\n";
+                        found = true;
+                    }
                 }
             }
         }
+        if (!found) {
+            cout << "\e[1;31m✘ " << name << " not currently stored.\e[m\n";
+        }
     }
-    if (!found)
-        cout << "\n\n\e[1;31mItem " << itemName << " not found.\e[m\n";
+
     clearScreen();
 }
 
@@ -634,7 +676,6 @@ void displayItems(const vector<item> &itemsList) {
              << " (" << daysLeft << " days left)" << "\e[m\n";
     }
 }
-
 int main()
 {
     warehouse w;
@@ -668,8 +709,11 @@ int main()
         clearScreen();
         break;
     }
-
     int choice;
+    Trie itemTrie;
+    for (const auto& it : itemsList) {
+        itemTrie.insert(it.name);
+    }
     do
     {
         cout << "\e[1;33mChoose an action:\e[m\n";
@@ -722,11 +766,11 @@ int main()
         {
             Cleardisplay();
             string query;
-            cout << "\e[1;33mEnter item name to search: \e[m";
+            cout << "\e[1;33mEnter item name (or prefix) to search: \e[m";
             cin >> query;
-            searchItem(w, query);
+            searchItem(w, itemTrie, query); // updated function with Trie
             break;
-        }
+        }   
         case 5:
         {
             Cleardisplay();
