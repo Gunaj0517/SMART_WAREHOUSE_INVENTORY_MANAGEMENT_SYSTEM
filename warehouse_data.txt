@@ -1,20 +1,20 @@
 3 3 7
 3 1
 parth (3kg, Exp: 2090-09-09)
+2 1
+brinda (2kg*, Exp: 2070-03-03)
 5 1
-Kiwi (5kg, Exp: 2025-07-16)
-6 1
-Grapes (6kg*, Exp: 2029-11-11)
-1 1
-Grapes (1kg*, Exp: 2029-11-11)
-0 0
-5 1
-Grapes (5kg, Exp: 2029-11-11)
+brinda (5kg, Exp: 2070-03-03)
 0 0
 0 0
 0 0
-0
+0 0
+0 0
+0 0
 3
+parth 3 m 2090 9 9
+brinda 2 m 2070 3 3
+brinda 5 m 2070 3 3
+2
 parth 1 0 0
-Kiwi 1 0 1
-Grapes 3 0 2 1 0 1 2
+brinda 2 0 1 0 2

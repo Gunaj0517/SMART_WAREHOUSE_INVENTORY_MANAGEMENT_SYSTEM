@@ -649,55 +649,61 @@ void populateItemsFromShelfGrid(const warehouse &w, vector<item> &itemsList)
         }
     }
 }
-void showExpiringSoonItems(const vector<item> &itemsList)
-{
+void showExpiringSoonItems(const warehouse &w) {
     int daysAhead;
     cout << "\n\e[35mEnter number of days ahead to check for expiry: \e[m";
     cin >> daysAhead;
 
     time_t now = time(0);
-
-    // Set current time to today's midnight
     tm *nowTm = localtime(&now);
     nowTm->tm_hour = 0;
     nowTm->tm_min = 0;
     nowTm->tm_sec = 0;
     now = mktime(nowTm);
 
-    bool found = false; // to check if any item matched
+    bool found = false;
 
-    for (const auto &it : itemsList)
-    {
-        tm expiryTm = {};
-        expiryTm.tm_year = it.year - 1900;
-        expiryTm.tm_mon = it.month - 1;
-        expiryTm.tm_mday = it.day;
-        expiryTm.tm_hour = 0;
-        expiryTm.tm_min = 0;
-        expiryTm.tm_sec = 0;
+    for (int i = 0; i < w.rows; ++i) {
+        for (int j = 0; j < w.columns; ++j) {
+            for (const string &desc : w.shelfGrid[i][j].storedItems) {
+                string name;
+                int y, m, d;
 
-        time_t expiryTime = mktime(&expiryTm);
+                size_t nameEnd = desc.find(" (");
+                size_t expStart = desc.find("Exp: ");
 
-        if (expiryTime == -1)
-        {
-            continue; // invalid expiry date, skip
-        }
+                if (nameEnd == string::npos || expStart == string::npos) continue;
 
-        double diffSeconds = difftime(expiryTime, now);
-        int diffDays = diffSeconds / (60 * 60 * 24);
+                name = desc.substr(0, nameEnd);
+                string dateStr = desc.substr(expStart + 5);
+                sscanf(dateStr.c_str(), "%d-%d-%d", &y, &m, &d);
 
-        if (diffDays >= 0 && diffDays <= daysAhead)
-        {
-            cout << "\n\e[1;35mItems expiring within next " << daysAhead << " days:\e[m\n";
-            found = true;
-            cout << "\e[32mItem Name: " << it.name << "\n";
-            cout << "Expiry Date: " << it.day << "-" << it.month << "-" << it.year << "\n";
-            cout << "Days Left: " << diffDays << " days\e[m\n\n";
+                tm expiryTm = {};
+                expiryTm.tm_year = y - 1900;
+                expiryTm.tm_mon = m - 1;
+                expiryTm.tm_mday = d;
+
+                time_t expiryTime = mktime(&expiryTm);
+                if (expiryTime == -1) continue;
+
+                double diffSeconds = difftime(expiryTime, now);
+                int diffDays = diffSeconds / (60 * 60 * 24);
+
+                if (diffDays >= 0 && diffDays <= daysAhead) {
+                    if (!found) {
+                        cout << "\n\e[1;35mItems expiring within next " << daysAhead << " days:\e[m\n";
+                        found = true;
+                    }
+                    cout << "\e[32mItem: " << name
+                         << " | Shelf: (" << i << "," << j << ")"
+                         << " | Expiry: " << d << "-" << m << "-" << y
+                         << " | Days Left: " << diffDays << "\e[m\n";
+                }
+            }
         }
     }
 
-    if (!found)
-    {
+    if (!found) {
         cout << "\e[1;31mNo items expiring within " << daysAhead << " days.\e[m\n";
     }
 }
@@ -908,10 +914,11 @@ case 1:
         case 6:
         {
             Cleardisplay();
-            showExpiringSoonItems(itemsList);
+            showExpiringSoonItems(w);
             clearScreen();
             break;
         }
+
 
         case 7:
         {
