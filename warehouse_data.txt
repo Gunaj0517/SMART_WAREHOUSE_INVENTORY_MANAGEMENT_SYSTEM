@@ -1,20 +1,35 @@
-3 3 7
-3 1
-parth (3kg, Exp: 2090-09-09)
-2 1
-brinda (2kg*, Exp: 2070-03-03)
+3 4 7
+0 0
+1 1
+Almonds (1kg*, Exp: 2026-05-08)
+7 2
+Almonds (4kg, Exp: 2026-05-08)
+Peaches (3kg*, Exp: 2025-05-18)
+7 1
+Peaches (7kg, Exp: 2025-05-18)
+7 1
+Banana (7kg*, Exp: 2025-05-30)
+7 2
+Banana (5kg, Exp: 2025-05-30)
+Cashews (2kg*, Exp: 2025-11-08)
 5 1
-brinda (5kg, Exp: 2070-03-03)
+Cashews (5kg, Exp: 2025-11-08)
 0 0
 0 0
 0 0
 0 0
 0 0
-0 0
-3
-parth 3 m 2090 9 9
-brinda 2 m 2070 3 3
-brinda 5 m 2070 3 3
-2
-parth 1 0 0
-brinda 2 0 1 0 2
+8
+Almonds 1 m 2026 5 8
+Almonds 4 m 2026 5 8
+Peaches 3 m 2025 5 18
+Peaches 7 m 2025 5 18
+Banana 7 m 2025 5 30
+Banana 5 m 2025 5 30
+Cashews 2 m 2025 11 8
+Cashews 5 m 2025 11 8
+4
+Peaches 2 0 2 0 3
+Almonds 2 0 1 0 2
+Banana 2 1 0 1 1
+Cashews 2 1 1 1 2

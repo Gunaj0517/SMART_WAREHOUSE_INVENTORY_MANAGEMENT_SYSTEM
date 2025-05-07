@@ -30,21 +30,21 @@ void clearScreen2()
     Cleardisplay();
 }
 
-// Struct for item details (removed size)
+
 struct item
 {
-    string name;          // Item name
-    int weight;           // Item weight in kg
-    char demand;          // Item demand ('h' for high, 'm' for medium, 'l' for low)
-    int year, month, day; // Expiry Date.
+    string name;          
+    int weight;           
+    char demand;          
+    int year, month, day; 
 };
 
-// Struct for shelf details
+
 struct shelf
 {
-    int maxWeight; // max weight each shelf can hold
+    int maxWeight; 
     int currentWeight = 0;
-    vector<string> storedItems; // List of items stored on the shelf
+    vector<string> storedItems; 
 };
 
 struct ItemMeta
@@ -53,7 +53,7 @@ struct ItemMeta
     int idx;
 };
 
-// Struct for warehouse information
+
 struct warehouse
 {
     int rows;
@@ -61,7 +61,7 @@ struct warehouse
     int weightPerShelf;
     int totalShelves;
     int totalCapacity;
-    vector<vector<shelf>> shelfGrid; // 2D grid for shelves
+    vector<vector<shelf>> shelfGrid; 
 };
 
 bool isExpired(int y, int m, int d)
@@ -151,7 +151,7 @@ void placeItemsKnapsackBased(warehouse &w, vector<item> &itemsList, unordered_ma
         itemMeta.push_back({score, i});
     }
 
-    // Sort by demand → expiry
+    
     sort(itemMeta.begin(), itemMeta.end(), [&](const ItemMeta &a, const ItemMeta &b)
          {
         if (a.priorityScore != b.priorityScore)
@@ -226,7 +226,7 @@ void displayWarehouseGrid(warehouse &w, vector<item> &itemsList)
             {
                 const shelf &s = w.shelfGrid[i][j];
 
-                // Set background color based on shelf status
+                
                 if (i == currentRow && j == currentCol) 
                 {
                     SetConsoleTextAttribute(hConsole, BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_INTENSITY);
@@ -298,13 +298,13 @@ void displayWarehouseGrid(warehouse &w, vector<item> &itemsList)
             cout << endl << endl;
         }
 
-        // Reset color
+        
         SetConsoleTextAttribute(hConsole, 7);
 
-        // Display graph/item coloring
+        
         displayItems(itemsList);
 
-        // Show selected shelf data
+        
         shelf &selected = w.shelfGrid[currentRow][currentCol];
         cout << "\nSelected Shelf: (" << currentRow << "," << currentCol << ")\n";
         cout << "Weight: " << selected.currentWeight << "kg\n";
@@ -323,17 +323,17 @@ void displayWarehouseGrid(warehouse &w, vector<item> &itemsList)
 
         cout << "\nUse Arrow Keys to Navigate, ESC to Exit.\n";
 
-        // Navigation
+        
         int key = _getch();
         if (key == 224) 
         {
             int arrow = _getch();
             switch (arrow) 
             {
-                case 72: if (currentRow > 0) currentRow--; break; // up
-                case 80: if (currentRow < w.rows - 1) currentRow++; break; // down
-                case 75: if (currentCol > 0) currentCol--; break; // left
-                case 77: if (currentCol < w.columns - 1) currentCol++; break; // right
+                case 72: if (currentRow > 0) currentRow--; break; 
+                case 80: if (currentRow < w.rows - 1) currentRow++; break; 
+                case 75: if (currentCol > 0) currentCol--; break; 
+                case 77: if (currentCol < w.columns - 1) currentCol++; break; 
             }
         } 
         else if (key == 27) 
@@ -342,15 +342,15 @@ void displayWarehouseGrid(warehouse &w, vector<item> &itemsList)
             break;
         }
 
-        // Uncomment below if needed, but it might hide output too soon
-        // clearScreen2(); 
+        
+        
     }
 }
-// Trie for autocomplete-based search
+
 struct TrieNode {
     bool isEnd;
     unordered_map<char, TrieNode*> children;
-    vector<string> fullNames;  // All item names that pass through this node
+    vector<string> fullNames;  
 
     TrieNode() : isEnd(false) {}
 };
@@ -367,7 +367,7 @@ public:
             if (!node->children[c])
                 node->children[c] = new TrieNode();
             node = node->children[c];
-            node->fullNames.push_back(word);  // Store full names along the path
+            node->fullNames.push_back(word);  
         }
         node->isEnd = true;
     }
@@ -387,22 +387,22 @@ void searchItem(const warehouse &w, const string &query)
 {
     cout << "\n\e[1;35mSearching for items matching prefix '" << query << "':\e[m\n";
 
-    unordered_set<string> displayedLocations; // Track displayed items with their locations
-    bool found = false; // Track if any items are found
+    unordered_set<string> displayedLocations; 
+    bool found = false; 
 
-    // Iterate through all shelves in the warehouse
+    
     for (int i = 0; i < w.rows; i++) {
         for (int j = 0; j < w.columns; j++) {
             for (const auto &storedItem : w.shelfGrid[i][j].storedItems) {
-                // Extract the item name from the stored string
+                
                 size_t pos = storedItem.find(" (");
                 string storedName = (pos != string::npos) ? storedItem.substr(0, pos) : storedItem;
 
-                // Check if the stored name starts with the query (prefix match)
+                
                 if (storedName.find(query) == 0) {
                     string uniqueKey = storedName + "_" + to_string(i) + "_" + to_string(j);
 
-                    // Avoid displaying duplicate results for the same location
+                    
                     if (displayedLocations.find(uniqueKey) == displayedLocations.end()) {
                         cout << "\e[1;32m✔ " << storedName << " found on shelf (" << i << ", " << j << "): " << storedItem << "\e[m\n";
                         displayedLocations.insert(uniqueKey);
@@ -422,20 +422,20 @@ void searchItem(const warehouse &w, const string &query)
 
 int tspFixedStart(const vector<pair<int, int>> &points, vector<int> &bestOrder)
 {
-    int n = points.size() - 1; // excluding starting point
+    int n = points.size() - 1; 
     vector<int> indices(n);
-    iota(indices.begin(), indices.end(), 1); // skip index 0 (which is start)
+    iota(indices.begin(), indices.end(), 1); 
 
     int minDist = INT_MAX;
 
     do
     {
         int dist = 0;
-        // distance from start to first point
+        
         dist += abs(points[0].first - points[indices[0]].first) +
                 abs(points[0].second - points[indices[0]].second);
 
-        // distance between intermediate points
+        
         for (int i = 0; i < n - 1; i++)
         {
             dist += abs(points[indices[i]].first - points[indices[i + 1]].first) +
@@ -458,7 +458,7 @@ void retrieveItemsWithTSP(unordered_map<string, vector<pair<int, int>>> &itemLoc
     cout << "\e[32mEnter number of items to retrieve: \e[m";
     cin >> n;
 
-    vector<pair<int, int>> points = {{0, 0}}; // starting point
+    vector<pair<int, int>> points = {{0, 0}}; 
     vector<string> itemOrder = {"START"};
 
     for (int i = 0; i < n; i++)
@@ -557,7 +557,7 @@ void loadDataFromFile(warehouse &w, vector<item> &itemsList, unordered_map<strin
         return;
     }
 
-    // Load warehouse config
+    
     file >> w.rows >> w.columns >> w.weightPerShelf;
     w.totalShelves = w.rows * w.columns;
     w.totalCapacity = w.totalShelves * w.weightPerShelf;
@@ -570,22 +570,22 @@ void loadDataFromFile(warehouse &w, vector<item> &itemsList, unordered_map<strin
             int currentWeight, storedCount;
             file >> currentWeight >> storedCount;
 
-            w.shelfGrid[i][j].currentWeight = currentWeight; // Don't remove this
-            w.shelfGrid[i][j].maxWeight = w.weightPerShelf;  // Don't remove this
+            w.shelfGrid[i][j].currentWeight = currentWeight; 
+            w.shelfGrid[i][j].maxWeight = w.weightPerShelf;  
 
             w.shelfGrid[i][j].storedItems.clear();
-            file.ignore(); // Consume any lingering newline character
+            file.ignore(); 
             for (int k = 0; k < storedCount; k++)
             {
                 string itemDesc;
-                file >> ws;                                        // Consume any leading whitespace
-                getline(file, itemDesc);                           // Read the full line for item name
-                w.shelfGrid[i][j].storedItems.push_back(itemDesc); // Add the item description
+                file >> ws;                                        
+                getline(file, itemDesc);                           
+                w.shelfGrid[i][j].storedItems.push_back(itemDesc); 
             }
         }
     }
 
-    // Load item list
+    
     int itemCount;
     file >> itemCount;
     itemsList.clear();
@@ -596,7 +596,7 @@ void loadDataFromFile(warehouse &w, vector<item> &itemsList, unordered_map<strin
         itemsList.push_back(it);
     }
 
-    // Load item locations
+    
     int locationCount;
     file >> locationCount;
     itemLocations.clear();
@@ -618,7 +618,7 @@ void loadDataFromFile(warehouse &w, vector<item> &itemsList, unordered_map<strin
 }
 void populateItemsFromShelfGrid(const warehouse &w, vector<item> &itemsList)
 {
-    itemsList.clear(); // Make sure we're starting fresh
+    itemsList.clear(); 
 
     for (int i = 0; i < w.rows; ++i) {
         for (int j = 0; j < w.columns; ++j) {
@@ -639,71 +639,65 @@ void populateItemsFromShelfGrid(const warehouse &w, vector<item> &itemsList)
                 size_t expStart = desc.find("Exp: ");
                 if (expStart == string::npos) continue;
 
-                string dateStr = desc.substr(expStart + 5); // after "Exp: "
+                string dateStr = desc.substr(expStart + 5); 
                 sscanf(dateStr.c_str(), "%d-%d-%d", &it.year, &it.month, &it.day);
 
-                it.demand = 'm'; // default, since demand info isn't stored in desc
+                it.demand = 'm'; 
 
                 itemsList.push_back(it);
             }
         }
     }
 }
-void showExpiringSoonItems(const warehouse &w) {
+void showExpiringSoonItems(const vector<item> &itemsList)
+{
     int daysAhead;
     cout << "\n\e[35mEnter number of days ahead to check for expiry: \e[m";
     cin >> daysAhead;
 
     time_t now = time(0);
+
+    
     tm *nowTm = localtime(&now);
     nowTm->tm_hour = 0;
     nowTm->tm_min = 0;
     nowTm->tm_sec = 0;
     now = mktime(nowTm);
 
-    bool found = false;
+    bool found = false; 
 
-    for (int i = 0; i < w.rows; ++i) {
-        for (int j = 0; j < w.columns; ++j) {
-            for (const string &desc : w.shelfGrid[i][j].storedItems) {
-                string name;
-                int y, m, d;
+    for (const auto &it : itemsList)
+    {
+        tm expiryTm = {};
+        expiryTm.tm_year = it.year - 1900;
+        expiryTm.tm_mon = it.month - 1;
+        expiryTm.tm_mday = it.day;
+        expiryTm.tm_hour = 0;
+        expiryTm.tm_min = 0;
+        expiryTm.tm_sec = 0;
 
-                size_t nameEnd = desc.find(" (");
-                size_t expStart = desc.find("Exp: ");
+        time_t expiryTime = mktime(&expiryTm);
 
-                if (nameEnd == string::npos || expStart == string::npos) continue;
+        if (expiryTime == -1)
+        {
+            continue; 
+        }
 
-                name = desc.substr(0, nameEnd);
-                string dateStr = desc.substr(expStart + 5);
-                sscanf(dateStr.c_str(), "%d-%d-%d", &y, &m, &d);
+        double diffSeconds = difftime(expiryTime, now);
+        int diffDays = diffSeconds / (60 * 60 * 24);
 
-                tm expiryTm = {};
-                expiryTm.tm_year = y - 1900;
-                expiryTm.tm_mon = m - 1;
-                expiryTm.tm_mday = d;
-
-                time_t expiryTime = mktime(&expiryTm);
-                if (expiryTime == -1) continue;
-
-                double diffSeconds = difftime(expiryTime, now);
-                int diffDays = diffSeconds / (60 * 60 * 24);
-
-                if (diffDays >= 0 && diffDays <= daysAhead) {
-                    if (!found) {
-                        cout << "\n\e[1;35mItems expiring within next " << daysAhead << " days:\e[m\n";
-                        found = true;
-                    }
-                    cout << "\e[32mItem: " << name
-                         << " | Shelf: (" << i << "," << j << ")"
-                         << " | Expiry: " << d << "-" << m << "-" << y
-                         << " | Days Left: " << diffDays << "\e[m\n";
-                }
-            }
+        if (diffDays >= 0 && diffDays <= daysAhead)
+        {
+            cout << "\n\e[1;35mItems expiring within next " << daysAhead << " days:\e[m\n";
+            found = true;
+            cout << "\e[32mItem Name: " << it.name << "\n";
+            cout << "Expiry Date: " << it.day << "-" << it.month << "-" << it.year << "\n";
+            cout << "Days Left: " << diffDays << " days\e[m\n\n";
         }
     }
 
-    if (!found) {
+    if (!found)
+    {
         cout << "\e[1;31mNo items expiring within " << daysAhead << " days.\e[m\n";
     }
 }
@@ -713,14 +707,14 @@ void deleteItem(warehouse &w, vector<item> &itemsList, unordered_map<string, vec
     cout << "\e[36mEnter the item name to delete: \e[m";
     cin >> itemName;
 
-    // Check if item exists
+    
     if (itemLocations.find(itemName) == itemLocations.end()) {
         cout << "\n\n\e[1;31mItem " << itemName << " not found in warehouse.\e[m\n";
         clearScreen();
         return;
     }
 
-    // Remove from shelfGrid
+    
     for (auto &loc : itemLocations[itemName]) {
         int r = loc.first;
         int c = loc.second;
@@ -741,21 +735,21 @@ void deleteItem(warehouse &w, vector<item> &itemsList, unordered_map<string, vec
             }
         }        
         
-        // Also, adjust the current weight (approximate, since original weight is inside string)
-        // Optional: You can improve this by storing exact weights separately if needed.
+        
+        
     }
 
-    // Remove from itemLocations
+    
     itemLocations.erase(itemName);
 
-    // Remove from itemsList
+    
     itemsList.erase(remove_if(itemsList.begin(), itemsList.end(),
                                [&](const item &it) { return it.name == itemName; }),
                     itemsList.end());
 
     cout << "\n\n\e[1;32mItem " << itemName << " deleted successfully!\e[m\n";
 
-    // Update file after deletion
+    
     saveDataToFile(w, itemsList, itemLocations);
 
 }
@@ -781,11 +775,11 @@ void displayItems(const vector<item> &itemsList) {
         string color;
 
         if (daysLeft < 0)
-            color = "\e[1;31m";  // Red
+            color = "\e[1;31m";  
         else if (daysLeft <= 60)
-            color = "\e[1;33m";  // Yellow
+            color = "\e[1;33m";  
         else
-            color = "\e[1;32m";  // Green
+            color = "\e[1;32m";  
 
         cout << color << "Item: " << it.name
              << ", Weight: " << it.weight
@@ -814,9 +808,9 @@ int main()
     {
 case 1:
     Cleardisplay();
-    loadDataFromFile(w, itemsList, itemLocations); // Load data without modifying the function
-    populateItemsFromShelfGrid(w, itemsList);      // Synchronize itemsList with shelfGrid
-    itemTrie = Trie();                             // Rebuild the Trie
+    loadDataFromFile(w, itemsList, itemLocations); 
+    populateItemsFromShelfGrid(w, itemsList);      
+    itemTrie = Trie();                             
     for (const auto &it : itemsList)
     {
         itemTrie.insert(it.name);
@@ -855,18 +849,18 @@ case 1:
         case 1:
             Cleardisplay();
         
-            // 🧹 Purana list clear karna zaroori hai warna dubaara place ho jaate hain
-            itemsList.clear();               // 🔴 ADD THIS LINE
+            
+            itemsList.clear();               
         
-            getItems(itemsList);            // 🟢 Sirf naye items lo user se
+            getItems(itemsList);            
         
             for (const auto& it : itemsList) {
-                itemTrie.insert(it.name);   // autocomplete ke liye
+                itemTrie.insert(it.name);   
             }
         
-            placeItemsKnapsackBased(w, itemsList, itemLocations);  // 📦 Place items into shelves
+            placeItemsKnapsackBased(w, itemsList, itemLocations);  
         
-            // 🧹 Jinke weight 0 ho gaye (fully placed), unhe hata do
+            
             itemsList.erase(remove_if(itemsList.begin(), itemsList.end(), [](const item &it) {
                 return it.weight == 0;
             }), itemsList.end());
@@ -900,7 +894,7 @@ case 1:
             string query;
             cout << "\e[1;33mEnter item name (or prefix) to search: \e[m";
             cin >> query;
-            searchItem(w, query); // Pass query directly// updated function with Trie
+            searchItem(w, query); 
             break; 
         }   
         case 5:
@@ -914,11 +908,10 @@ case 1:
         case 6:
         {
             Cleardisplay();
-            showExpiringSoonItems(w);
+            showExpiringSoonItems(itemsList);
             clearScreen();
             break;
         }
-
 
         case 7:
         {
